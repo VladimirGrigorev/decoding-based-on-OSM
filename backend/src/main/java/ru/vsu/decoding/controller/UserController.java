@@ -1,37 +1,36 @@
 package ru.vsu.decoding.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.vsu.decoding.entity.User;
-import ru.vsu.decoding.repository.UserRepository;
+import ru.vsu.decoding.data.dto.UserDto;
+import ru.vsu.decoding.data.mapper.UserMapper;
+import ru.vsu.decoding.service.UserService;
 
-import java.util.ArrayList;
+import java.math.BigInteger;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/v1/users")
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private final UserMapper userMapper;
 
-    @Autowired
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserController(UserService userService,
+                          UserMapper userMapper) {
+        this.userService = userService;
+        this.userMapper = userMapper;
     }
 
-    @GetMapping
-    public List<User> getUsers() {
+    @GetMapping(path = "")
+    public List<UserDto> getUsers() {
+        return userMapper.userToUserDto(userService.getAllUsers());
+    }
 
-        userRepository.deleteAll();
-
-        userRepository.save(new User("Alice", "Smith"));
-        userRepository.save(new User("Bob", "Smith"));
-
-        List<User> list = new ArrayList<>();
-        userRepository.findAll().iterator().forEachRemaining(list::add);
-
-        return list;
+    @GetMapping(path = "/{id}")
+    public UserDto getUser(@PathVariable BigInteger id) {
+        return userMapper.userToUserDto(userService.getUser(id));
     }
 }
