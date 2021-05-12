@@ -1,13 +1,15 @@
 package ru.vsu.decoding;
 
+import com.github.cloudyrock.spring.v5.EnableMongock;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DecodingApplication {
+@EnableMongock
+public class Application {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DecodingApplication.class, args);
+		SpringApplication.run(Application.class, args);
 	}
 
 }
