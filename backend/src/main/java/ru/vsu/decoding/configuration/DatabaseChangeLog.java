@@ -37,13 +37,13 @@ public class DatabaseChangeLog {
         User admin = new User();
         Role adminRole = roleRepository.findByName("ROLE_ADMIN");
         admin.setName("Admin");
-        admin.setPassword("$2a$10$dckIa0wLYrrfrjLsZvsy4eGdzuhJO7Lj5pbEqZz.qWmi2r96Cyxx6");
+        admin.setPassword("$2a$10$LcNC.bebj9mQ4VO1aAYghe1x7tncr8vDRcM3QPzxrxYtCp4BxSyP2");
         admin.setRoles(Collections.singletonList(adminRole));
 
         User user = new User();
         Role userRole = roleRepository.findByName("ROLE_USER");
         user.setName("User");
-        user.setPassword("$2a$10$dckIa0wLYrrfrjLsZvsy4eGdzuhJO7Lj5pbEqZz.qWmi2r96Cyxx6");
+        user.setPassword("$2a$10$LcNC.bebj9mQ4VO1aAYghe1x7tncr8vDRcM3QPzxrxYtCp4BxSyP2");
         user.setRoles(Collections.singletonList(userRole));
 
         userList.add(admin);

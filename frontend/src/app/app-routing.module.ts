@@ -1,9 +1,16 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import {MapComponent} from "./map/map.component";
+import {MapComponent} from "./component/map/map.component";
+import {ProfileComponent} from "./component/profile/profile.component";
+import {RegisterComponent} from "./component/register/register.component";
+import {LoginComponent} from "./component/login/login.component";
 
 const routes: Routes = [
-  {path: 'map', component: MapComponent}
+  {path: '', component: MapComponent},
+  {path: 'map', component: MapComponent},
+  {path: 'profile', component: ProfileComponent},
+  {path: 'register', component: RegisterComponent},
+  {path: 'login', component: LoginComponent},
 ];
 
 @NgModule({

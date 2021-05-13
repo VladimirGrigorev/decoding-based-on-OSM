@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import {CurrentUserService} from "./service/current-user/current-user.service";
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,18 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'frontend';
+
+  constructor(
+    private currentUserService: CurrentUserService
+  ) {
+  }
+
+  isAuthenticated(): boolean{
+    return this.currentUserService.isAuthenticated();
+  }
+
+  logout() {
+    this.currentUserService.logout();
+    location.reload();
+  }
 }
