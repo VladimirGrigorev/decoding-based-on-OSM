@@ -1,6 +1,20 @@
-
-<div id="map"
-     leaflet
-     (leafletMapReady)="onMapReady($event)"
-     [leafletOptions]="mapOptions">
+<div class="row">
+  <div class="col-2">
+    <div class="row justify-content-md-center">
+      <button type="button" class="btn btn-outline-dark" style="width: 150px; margin-top: 40px">Автоматическое<br />определение</button>
+      <button type="button" class="btn btn-outline-dark" style="width: 150px; margin-top: 40px">Ручное<br />определение</button>
+      <button type="button" class="btn btn-outline-dark" style="width: 150px; margin-top: 40px">Сделать<br />чек-ин</button>
+      <h6 style="margin-top: 40px; width: 200px;" align="center">Ваше местоположение</h6>
+      <h6 style="width: 200px;" align="center">{{name}}</h6>
+      <h6 style="margin-top: 10px; width: 200px;" align="center">Ширина</h6>
+      <h6 style="width: 200px;" align="center">{{latitude}}</h6>
+      <h6 style="margin-top: 10px; width: 200px;" align="center">Долгота</h6>
+      <h6 style="width: 200px;" align="center">{{longitude}}</h6>
+    </div>
+  </div>
+  <div id="map" class="col-10"
+       leaflet
+       (leafletMapReady)="onMapReady($event)"
+       [leafletOptions]="mapOptions">
+  </div>
 </div>

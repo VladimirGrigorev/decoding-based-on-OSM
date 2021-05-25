@@ -1,4 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {User} from "../../model/user";
+import {Subscription} from "rxjs";
+import {ActivatedRoute, Router} from "@angular/router";
+import {SecurityService} from "../../service/security/security.service";
+import {CurrentUserService} from "../../service/current-user/current-user.service";
+import {first} from "rxjs/operators";
 
 @Component({
   selector: 'app-profile',
@@ -7,9 +13,25 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ProfileComponent implements OnInit {
 
-  constructor() { }
+  username: string | undefined;
+  userInfo: User = {} as User;
+  private sub: Subscription | undefined;
+  isAdmin: boolean = false;
+  user: User = {} as User;
 
-  ngOnInit(): void {
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private currentUserService: CurrentUserService
+  ) { }
+
+  ngOnInit() {
+    this.sub = this.route.params.subscribe(params => {
+      this.loadUserProfile();
+    });
   }
 
+  loadUserProfile() {
+    this.user = this.currentUserService.getCurrentUser();
+  }
 }

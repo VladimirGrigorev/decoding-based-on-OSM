@@ -12,6 +12,9 @@ export class MapComponent implements OnInit {
 
   map: any;
   mapOptions: any;
+  name: string | undefined;
+  latitude: number | undefined;
+  longitude: number | undefined;
 
   constructor(
     private geocodingService: GeocodingService
@@ -89,6 +92,9 @@ export class MapComponent implements OnInit {
             iconUrl: 'assets/marker-icon.png'
           }));
       marker.addTo(this.map);
+      this.name = res.searchResult.properties.name;
+      this.latitude = res.latitude;
+      this.longitude = res.longitude;
     });
 
     const circle = L.circleMarker([lat, lon],

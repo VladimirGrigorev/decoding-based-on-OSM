@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import {CurrentUserService} from "./service/current-user/current-user.service";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-root',
@@ -10,7 +11,8 @@ export class AppComponent {
   title = 'frontend';
 
   constructor(
-    private currentUserService: CurrentUserService
+    private currentUserService: CurrentUserService,
+    private router: Router
   ) {
   }
 
@@ -20,6 +22,13 @@ export class AppComponent {
 
   logout() {
     this.currentUserService.logout();
-    location.reload();
+    this.router.navigate(['']);
+  }
+
+  isUser(): boolean{
+    if(this.currentUserService.isAuthenticated())
+      return !!this.currentUserService.getCurrentUser().roles.find(role => role.name == "ROLE_USER");
+    else
+      return false;
   }
 }
