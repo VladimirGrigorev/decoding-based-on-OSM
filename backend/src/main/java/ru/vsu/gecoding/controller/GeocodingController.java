@@ -1,6 +1,7 @@
 package ru.vsu.gecoding.controller;
 
 import org.bson.Document;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.vsu.gecoding.data.dto.GeocodingResultDTO;
 import ru.vsu.gecoding.data.dto.UserLocationDTO;
@@ -17,12 +18,12 @@ public class GeocodingController {
     }
 
     @PostMapping(path = "/find")
-    public GeocodingResultDTO findUserLocation(@RequestBody UserLocationDTO userLocationDTO) {
-
+    public GeocodingResultDTO findUserLocation(@RequestBody UserLocationDTO userLocationDTO, Authentication authentication) {
         Document result = geocodingService.geospatialQuery(
-                51.6561,
-                39.20632,
-                500
+                userLocationDTO.getLatitude(),
+                userLocationDTO.getLongitude(),
+                userLocationDTO.getAccuracy(),
+                authentication
         );
 
         GeocodingResultDTO geocodingResultDTO = geocodingService.findCenterPoint(result);

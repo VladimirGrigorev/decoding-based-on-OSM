@@ -1,5 +1,6 @@
 package ru.vsu.gecoding.data.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -10,21 +11,15 @@ import java.math.BigInteger;
 import java.util.List;
 
 @Data
+@AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "user")
-public class User {
+@Document(collection = "question")
+public class Question {
 
     @Id
     private BigInteger _id;
 
-    private String name;
-    private String password;
-    private String gender;
-    private Integer age;
-
-    private List<Question> interests;
-    private List<Checkin> checkins;
-
-    @DBRef(lazy = true)
-    private List<Role> roles;
+    private String text;
+    private String tag;
+    private String tagValue;
 }

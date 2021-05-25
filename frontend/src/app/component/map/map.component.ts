@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import * as L from 'leaflet';
 import {SecurityService} from "../../service/security/security.service";
 import {GeocodingService} from "../../service/geocoding/geocoding.service";
+import {CheckinService} from "../../service/checkin/checkin.service";
 
 @Component({
   selector: 'app-map',
@@ -17,7 +18,8 @@ export class MapComponent implements OnInit {
   longitude: number | undefined;
 
   constructor(
-    private geocodingService: GeocodingService
+    private geocodingService: GeocodingService,
+    private checkinService: CheckinService
   ) {
   }
 
@@ -27,10 +29,11 @@ export class MapComponent implements OnInit {
     }
     navigator.geolocation.getCurrentPosition((position) => {
       console.log(
-        `lat: ${position.coords.latitude}, lon: ${position.coords.longitude}, pog: ${position.coords.accuracy}`
+        `lat: ${position.coords.latitude}, lon: ${position.coords.longitude}, acc: ${position.coords.accuracy}`
       );
 
-      this.addSampleMarker(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
+      // this.addSampleMarker(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
+      this.addSampleMarker(51.6561, 39.20632, 500);
     });
 
     this.watchPosition();
@@ -43,13 +46,14 @@ export class MapComponent implements OnInit {
     let id = navigator.geolocation.watchPosition(
       (position) => {
         console.log(
-          `lat: ${position.coords.latitude}, lon: ${position.coords.longitude}, pog: ${position.coords.accuracy}`
+          `lat: ${position.coords.latitude}, lon: ${position.coords.longitude}, acc: ${position.coords.accuracy}`
         );
         if (position.coords.latitude === desLat && position.coords.longitude === desLon) {
           navigator.geolocation.clearWatch(id);
         }
 
-        this.addSampleMarker(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
+        // this.addSampleMarker(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
+        this.addSampleMarker(51.6561, 39.20632, 500);
       },
       (err) => {
         console.log(err);
@@ -82,7 +86,6 @@ export class MapComponent implements OnInit {
   }
 
   private addSampleMarker(lat: number, lon: number, acc: number) {
-    //const marker = new L.Marker([51.6561, 39.20632])
     this.geocodingService.findUserLocation(lat, lon, acc).subscribe(res => {
       const marker = new L.Marker([res.latitude, res.longitude])
         .setIcon(
@@ -97,11 +100,17 @@ export class MapComponent implements OnInit {
       this.longitude = res.longitude;
     });
 
-    const circle = L.circleMarker([lat, lon],
+    const circle = L.circle([lat, lon],
       {
-        radius: 320
+        radius: acc
       }
     ).addTo(this.map);
   }
 
+  onSubmit() {
+    if(this.name)
+      this.checkinService.createCheckin(this.name).subscribe(res=>{
+        console.log('successfully');
+      });
+  }
 }

@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
-import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {Observable} from "rxjs";
-import {GeocodingResult} from "../../model/geocoding-result";
 import {CurrentUserService} from "../current-user/current-user.service";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {Question} from "../../model/question";
 
 @Injectable({
   providedIn: 'root'
 })
-export class GeocodingService {
+export class QuestionService {
 
   constructor(
     private http: HttpClient,
@@ -15,14 +15,12 @@ export class GeocodingService {
   ) {
   }
 
-  findUserLocation(latitude: number, longitude: number, accuracy: number): Observable<GeocodingResult> {
-    let body = {
-      latitude,
-      longitude,
-      accuracy
-    };
+  getQuestions(): Observable<Question[]> {
+    return this.http.get<Question[]>(`api/v1/question`, this.buildOpts());
+  }
 
-    return this.http.post<GeocodingResult>('api/v1/geocoding/find', body, this.buildOpts());
+  setUserQuestions(questions: Array<any>) {
+    return this.http.post(`api/v1/question`, questions, this.buildOpts());
   }
 
   private buildOpts(): object {

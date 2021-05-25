@@ -8,8 +8,13 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.geojson.Point;
 import com.mongodb.client.model.geojson.Position;
 import org.bson.Document;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import ru.vsu.gecoding.data.dto.GeocodingResultDTO;
+import ru.vsu.gecoding.data.entity.Question;
+import ru.vsu.gecoding.data.entity.User;
+import ru.vsu.gecoding.data.repository.QuestionRepository;
+import ru.vsu.gecoding.data.repository.UserRepository;
 import ru.vsu.gecoding.exeption.NotFoundException;
 
 import java.awt.geom.Point2D;
@@ -18,7 +23,13 @@ import java.util.ArrayList;
 @Service
 public class GeocodingService {
 
-    public Document geospatialQuery(double latitude, double longitude, double accuracy) {
+    private final UserRepository userRepository;
+
+    public GeocodingService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public Document geospatialQuery(double latitude, double longitude, double accuracy, Authentication authentication) {
         MongoClient mongoClient = MongoClients.create();
         MongoDatabase database = mongoClient.getDatabase("project_database");
 
@@ -27,10 +38,20 @@ public class GeocodingService {
         FindIterable<Document> searchResults = database.getCollection("voronezh").find(
                 Filters.near("geometry", currentLoc, accuracy, 0.0));
 
-        Document result = searchResults.first();
+        ArrayList<Document> namedObjects = findNamedLocations(searchResults);
+
+        if(authentication != null) {
+            Document location = findLocationByInterest(namedObjects, authentication);
+            if(location != null)
+                return location;
+        }
+
         mongoClient.close();
 
-        return result;
+        if(namedObjects.get(0) == null)
+            throw new NotFoundException();
+
+        return namedObjects.get(0);
     }
 
     public GeocodingResultDTO findCenterPoint(Document data) {
@@ -71,5 +92,33 @@ public class GeocodingService {
             }
         }
         return new Point2D.Double((minY + maxY) /2, (minX + maxX) /2);
+    }
+
+    private ArrayList<Document> findNamedLocations(FindIterable<Document> searchResults){
+        ArrayList<Document> namedObjects = new ArrayList<>();
+        for(Document location : searchResults) {
+            if(((Document) location.get("properties")).get("name") != null){
+                namedObjects.add(location);
+            }
+        }
+        return namedObjects;
+    }
+
+    private Document findLocationByInterest(ArrayList<Document> namedObjects, Authentication authentication) {
+        String currentPrincipalName = authentication.getName();
+        User user = userRepository.findByName(currentPrincipalName);
+
+        if (user.getInterests().size() != 0) {
+            for (Document location : namedObjects) {
+                for (Question question : user.getInterests())
+                    if (((Document) location.get("properties")).get(question.getTag()) != null) {
+                        Object tegValue = ((Document) location.get("properties")).get(question.getTag());
+                        if (tegValue.toString().equals(question.getTagValue())) {
+                            return location;
+                        }
+                    }
+            }
+        }
+        return null;
     }
 }
