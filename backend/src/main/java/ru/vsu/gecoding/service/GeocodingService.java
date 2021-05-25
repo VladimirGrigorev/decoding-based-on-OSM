@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import ru.vsu.gecoding.data.dto.GeocodingResultDTO;
 import ru.vsu.gecoding.data.entity.Question;
 import ru.vsu.gecoding.data.entity.User;
-import ru.vsu.gecoding.data.repository.QuestionRepository;
 import ru.vsu.gecoding.data.repository.UserRepository;
 import ru.vsu.gecoding.exeption.NotFoundException;
 
@@ -62,13 +61,64 @@ public class GeocodingService {
         else
             throw new NotFoundException();
 
-        if(geometry.get("type").equals("MultiPolygon")){
+        if(geometry.get("type").equals("Point")){
+            ArrayList<Double> point = (ArrayList<Double>) geometry.get("coordinates");
+            return new GeocodingResultDTO(data, point.get(0), point.get(1));
+        }
+        else if(geometry.get("type").equals("LineString")){
+            Point2D.Double result = findExtremesForLineString(geometry);
+            return new GeocodingResultDTO(data, result.x, result.y);
+        }
+        else if(geometry.get("type").equals("Polygon")){
+            Point2D.Double result = findExtremesForPolygon(geometry);
+            return new GeocodingResultDTO(data, result.x, result.y);
+        }
+        else if(geometry.get("type").equals("MultiPolygon")){
             Point2D.Double result = findExtremesForMultiPolygon(geometry);
-
             return new GeocodingResultDTO(data, result.x, result.y);
         }
 
         return null;
+    }
+
+    private Point2D.Double findExtremesForLineString(Document geometry){
+       ArrayList<ArrayList<Double>> polygon =
+                (ArrayList<ArrayList<Double>>) geometry.get("coordinates");
+
+        Double maxX = 0.0; Double minX = 0.0; Double maxY = 0.0; Double minY = 0.0;
+
+        for(int i = 0; i < polygon.size(); i++) {
+            minX = (polygon.get(i).get(0) < minX || minX == 0)
+                    ? polygon.get(i).get(0) : minX;
+            maxX = (polygon.get(i).get(0) > maxX || maxX == 0)
+                    ? polygon.get(i).get(0) : maxX;
+            minY = (polygon.get(i).get(1) < minY || minY == 0)
+                    ? polygon.get(i).get(1) : minY;
+            maxY = (polygon.get(i).get(1) > maxY || maxY == 0)
+                    ? polygon.get(i).get(1) : maxY;
+        }
+        return new Point2D.Double((minY + maxY) /2, (minX + maxX) /2);
+    }
+
+    private Point2D.Double findExtremesForPolygon(Document geometry){
+        ArrayList<ArrayList<ArrayList<Double>>> polygon =
+                (ArrayList<ArrayList<ArrayList<Double>>>) geometry.get("coordinates");
+
+        Double maxX = 0.0; Double minX = 0.0; Double maxY = 0.0; Double minY = 0.0;
+
+        for(int i = 0; i < polygon.size(); i++) {
+            for (int j = 0; j < polygon.get(i).size(); j++) {
+                minX = (polygon.get(i).get(j).get(0) < minX || minX == 0)
+                        ? polygon.get(i).get(j).get(0) : minX;
+                maxX = (polygon.get(i).get(j).get(0) > maxX || maxX == 0)
+                        ? polygon.get(i).get(j).get(0) : maxX;
+                minY = (polygon.get(i).get(j).get(1) < minY || minY == 0)
+                        ? polygon.get(i).get(j).get(1) : minY;
+                maxY = (polygon.get(i).get(j).get(1) > maxY || maxY == 0)
+                        ? polygon.get(i).get(j).get(1) : maxY;
+            }
+        }
+        return new Point2D.Double((minY + maxY) /2, (minX + maxX) /2);
     }
 
     private Point2D.Double findExtremesForMultiPolygon(Document geometry){
