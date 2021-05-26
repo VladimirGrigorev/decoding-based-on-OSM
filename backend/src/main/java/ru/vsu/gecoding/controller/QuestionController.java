@@ -24,7 +24,7 @@ public class QuestionController {
         return questionService.getAllQuestions();
     }
 
-    @PostMapping(path = "/find")
+    @PostMapping(path = "")
     public void setUserQuestions(@RequestBody ArrayList<String> questions, Authentication authentication){
         String currentPrincipalName = authentication.getName();
         questionService.setUserQuestions(questions, currentPrincipalName);

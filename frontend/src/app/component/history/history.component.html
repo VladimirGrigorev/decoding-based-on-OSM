@@ -1,1 +1,13 @@
-<p>history works!</p>
+<div id="cont">
+  <h2>История чек-инов</h2>
+  <table class="table table-bordered" style="width: 1200px">
+    <tr>
+      <th style="width: 400px">Дата</th>
+      <th>Местоположение</th>
+    </tr>
+    <tr *ngFor="let checkin of checkins">
+      <td>{{ checkin.date }}</td>
+      <td>{{ checkin.locationName }}</td>
+    </tr>
+  </table>
+</div>

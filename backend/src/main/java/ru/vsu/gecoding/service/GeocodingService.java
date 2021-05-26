@@ -11,6 +11,7 @@ import org.bson.Document;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import ru.vsu.gecoding.data.dto.GeocodingResultDTO;
+import ru.vsu.gecoding.data.entity.Checkin;
 import ru.vsu.gecoding.data.entity.Question;
 import ru.vsu.gecoding.data.entity.User;
 import ru.vsu.gecoding.data.repository.UserRepository;
@@ -28,52 +29,59 @@ public class GeocodingService {
         this.userRepository = userRepository;
     }
 
-    public Document geospatialQuery(double latitude, double longitude, double accuracy, Authentication authentication) {
+    public Document findUserLocation(double latitude, double longitude, double accuracy, Authentication authentication) {
         MongoClient mongoClient = MongoClients.create();
         MongoDatabase database = mongoClient.getDatabase("project_database");
 
         Point currentLoc = new Point(new Position(longitude, latitude));
 
+        // геопространственный запрос nearSphere
         FindIterable<Document> searchResults = database.getCollection("voronezh").find(
-                Filters.near("geometry", currentLoc, accuracy, 0.0));
+                Filters.nearSphere("geometry", currentLoc, accuracy, 0.0));
 
+        // выборка только именнованных объектов
         ArrayList<Document> namedObjects = findNamedLocations(searchResults);
 
-        if(authentication != null) {
+        if (authentication != null) {
+            // пробуем найти локацию с учетом интересов
             Document location = findLocationByInterest(namedObjects, authentication);
-            if(location != null)
+            if (location != null)
                 return location;
+            else {
+                // пробуем найти локацию с учетом истории чек-инов
+                location = findLocationByHistory(namedObjects, authentication);
+                if (location != null)
+                    return location;
+            }
         }
 
         mongoClient.close();
 
-        if(namedObjects.get(0) == null)
+        if (namedObjects.get(0) == null)
             throw new NotFoundException();
 
+        // берем первый ближайший результат
         return namedObjects.get(0);
     }
 
     public GeocodingResultDTO findCenterPoint(Document data) {
         Document geometry;
 
-        if(data != null)
+        if (data != null)
             geometry = (Document) data.get("geometry");
         else
             throw new NotFoundException();
 
-        if(geometry.get("type").equals("Point")){
+        if (geometry.get("type").equals("Point")) {
             ArrayList<Double> point = (ArrayList<Double>) geometry.get("coordinates");
-            return new GeocodingResultDTO(data, point.get(0), point.get(1));
-        }
-        else if(geometry.get("type").equals("LineString")){
+            return new GeocodingResultDTO(data, point.get(1), point.get(0));
+        } else if (geometry.get("type").equals("LineString")) {
             Point2D.Double result = findExtremesForLineString(geometry);
             return new GeocodingResultDTO(data, result.x, result.y);
-        }
-        else if(geometry.get("type").equals("Polygon")){
+        } else if (geometry.get("type").equals("Polygon")) {
             Point2D.Double result = findExtremesForPolygon(geometry);
             return new GeocodingResultDTO(data, result.x, result.y);
-        }
-        else if(geometry.get("type").equals("MultiPolygon")){
+        } else if (geometry.get("type").equals("MultiPolygon")) {
             Point2D.Double result = findExtremesForMultiPolygon(geometry);
             return new GeocodingResultDTO(data, result.x, result.y);
         }
@@ -81,13 +89,16 @@ public class GeocodingService {
         return null;
     }
 
-    private Point2D.Double findExtremesForLineString(Document geometry){
-       ArrayList<ArrayList<Double>> polygon =
+    private Point2D.Double findExtremesForLineString(Document geometry) {
+        ArrayList<ArrayList<Double>> polygon =
                 (ArrayList<ArrayList<Double>>) geometry.get("coordinates");
 
-        Double maxX = 0.0; Double minX = 0.0; Double maxY = 0.0; Double minY = 0.0;
+        Double maxX = 0.0;
+        Double minX = 0.0;
+        Double maxY = 0.0;
+        Double minY = 0.0;
 
-        for(int i = 0; i < polygon.size(); i++) {
+        for (int i = 0; i < polygon.size(); i++) {
             minX = (polygon.get(i).get(0) < minX || minX == 0)
                     ? polygon.get(i).get(0) : minX;
             maxX = (polygon.get(i).get(0) > maxX || maxX == 0)
@@ -97,16 +108,19 @@ public class GeocodingService {
             maxY = (polygon.get(i).get(1) > maxY || maxY == 0)
                     ? polygon.get(i).get(1) : maxY;
         }
-        return new Point2D.Double((minY + maxY) /2, (minX + maxX) /2);
+        return new Point2D.Double((minY + maxY) / 2, (minX + maxX) / 2);
     }
 
-    private Point2D.Double findExtremesForPolygon(Document geometry){
+    private Point2D.Double findExtremesForPolygon(Document geometry) {
         ArrayList<ArrayList<ArrayList<Double>>> polygon =
                 (ArrayList<ArrayList<ArrayList<Double>>>) geometry.get("coordinates");
 
-        Double maxX = 0.0; Double minX = 0.0; Double maxY = 0.0; Double minY = 0.0;
+        Double maxX = 0.0;
+        Double minX = 0.0;
+        Double maxY = 0.0;
+        Double minY = 0.0;
 
-        for(int i = 0; i < polygon.size(); i++) {
+        for (int i = 0; i < polygon.size(); i++) {
             for (int j = 0; j < polygon.get(i).size(); j++) {
                 minX = (polygon.get(i).get(j).get(0) < minX || minX == 0)
                         ? polygon.get(i).get(j).get(0) : minX;
@@ -118,16 +132,19 @@ public class GeocodingService {
                         ? polygon.get(i).get(j).get(1) : maxY;
             }
         }
-        return new Point2D.Double((minY + maxY) /2, (minX + maxX) /2);
+        return new Point2D.Double((minY + maxY) / 2, (minX + maxX) / 2);
     }
 
-    private Point2D.Double findExtremesForMultiPolygon(Document geometry){
+    private Point2D.Double findExtremesForMultiPolygon(Document geometry) {
         ArrayList<ArrayList<ArrayList<ArrayList<Double>>>> multiPolygon =
                 (ArrayList<ArrayList<ArrayList<ArrayList<Double>>>>) geometry.get("coordinates");
 
-        Double maxX = 0.0; Double minX = 0.0; Double maxY = 0.0; Double minY = 0.0;
+        Double maxX = 0.0;
+        Double minX = 0.0;
+        Double maxY = 0.0;
+        Double minY = 0.0;
 
-        for(int i = 0; i < multiPolygon.size(); i++) {
+        for (int i = 0; i < multiPolygon.size(); i++) {
             for (int j = 0; j < multiPolygon.get(i).size(); j++) {
                 for (int k = 0; k < multiPolygon.get(i).get(j).size(); k++) {
                     minX = (multiPolygon.get(i).get(j).get(k).get(0) < minX || minX == 0)
@@ -141,13 +158,14 @@ public class GeocodingService {
                 }
             }
         }
-        return new Point2D.Double((minY + maxY) /2, (minX + maxX) /2);
+        return new Point2D.Double((minY + maxY) / 2, (minX + maxX) / 2);
     }
 
-    private ArrayList<Document> findNamedLocations(FindIterable<Document> searchResults){
+    private ArrayList<Document> findNamedLocations(FindIterable<Document> searchResults) {
         ArrayList<Document> namedObjects = new ArrayList<>();
-        for(Document location : searchResults) {
-            if(((Document) location.get("properties")).get("name") != null){
+        for (Document location : searchResults) {
+            // проверяем присутствует ли тэг name
+            if (((Document) location.get("properties")).get("name") != null) {
                 namedObjects.add(location);
             }
         }
@@ -158,15 +176,36 @@ public class GeocodingService {
         String currentPrincipalName = authentication.getName();
         User user = userRepository.findByName(currentPrincipalName);
 
-        if (user.getInterests().size() != 0) {
+        if (user.getInterests() != null) {
             for (Document location : namedObjects) {
-                for (Question question : user.getInterests())
+                for (Question question : user.getInterests()) {
                     if (((Document) location.get("properties")).get(question.getTag()) != null) {
                         Object tegValue = ((Document) location.get("properties")).get(question.getTag());
+                        // сравниваем значение тэга в локации со значением соответсвующего тэга в вопросе
                         if (tegValue.toString().equals(question.getTagValue())) {
                             return location;
                         }
                     }
+                }
+            }
+        }
+        return null;
+    }
+
+    private Document findLocationByHistory(ArrayList<Document> namedObjects, Authentication authentication) {
+        String currentPrincipalName = authentication.getName();
+        User user = userRepository.findByName(currentPrincipalName);
+
+        if (user.getCheckins() != null) {
+            for (Document location : namedObjects) {
+                for (Checkin checkin : user.getCheckins()) {
+                    if (((Document) location.get("properties")).get("name") != null) {
+                        // сравниваем имя локации с именем в локации чек-ина, берем первый ближайший результат
+                        if (((Document) location.get("properties")).get("name").equals(checkin.getLocationName())) {
+                            return location;
+                        }
+                    }
+                }
             }
         }
         return null;

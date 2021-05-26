@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import {QuestionService} from "../../service/question/question.service";
+import {CheckinService} from "../../service/checkin/checkin.service";
+import {Checkin} from "../../model/checkin";
 
 @Component({
   selector: 'app-history',
@@ -7,9 +10,16 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HistoryComponent implements OnInit {
 
-  constructor() { }
+  checkins: Array<Checkin> = [];
+
+  constructor(
+    private checkinService: CheckinService
+  ) { }
 
   ngOnInit(): void {
+    this.checkinService.findCheckins().subscribe(res => {
+      this.checkins = res;
+    })
   }
 
 }

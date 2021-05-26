@@ -19,7 +19,7 @@ public class GeocodingController {
 
     @PostMapping(path = "/find")
     public GeocodingResultDTO findUserLocation(@RequestBody UserLocationDTO userLocationDTO, Authentication authentication) {
-        Document result = geocodingService.geospatialQuery(
+        Document result = geocodingService.findUserLocation(
                 userLocationDTO.getLatitude(),
                 userLocationDTO.getLongitude(),
                 userLocationDTO.getAccuracy(),

@@ -28,15 +28,17 @@ export class MapComponent implements OnInit {
       console.log('location is not supported');
     }
     navigator.geolocation.getCurrentPosition((position) => {
+      //отображаем результат в консоль
       console.log(
         `lat: ${position.coords.latitude}, lon: ${position.coords.longitude}, acc: ${position.coords.accuracy}`
       );
 
-      // this.addSampleMarker(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
-      this.addSampleMarker(51.6561, 39.20632, 500);
+      this.addMarker(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
     });
 
+    //следим за изменением позиции
     this.watchPosition();
+    //инициализируем параметры карты
     this.initializeMapOptions();
   }
 
@@ -52,14 +54,14 @@ export class MapComponent implements OnInit {
           navigator.geolocation.clearWatch(id);
         }
 
-        // this.addSampleMarker(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
-        this.addSampleMarker(51.6561, 39.20632, 500);
+        this.addMarker(position.coords.latitude, position.coords.longitude, position.coords.accuracy);
       },
       (err) => {
         console.log(err);
       },
       {
         enableHighAccuracy: true,
+        // обновляем каждые 5 минут
         timeout: 5*60*1000,
         maximumAge: 0,
       }
@@ -85,7 +87,8 @@ export class MapComponent implements OnInit {
     };
   }
 
-  private addSampleMarker(lat: number, lon: number, acc: number) {
+  private addMarker(lat: number, lon: number, acc: number) {
+    // запрашиваем геокодирование местоположения
     this.geocodingService.findUserLocation(lat, lon, acc).subscribe(res => {
       const marker = new L.Marker([res.latitude, res.longitude])
         .setIcon(
@@ -100,6 +103,7 @@ export class MapComponent implements OnInit {
       this.longitude = res.longitude;
     });
 
+    //отображаем погрешность определения местоположения
     const circle = L.circle([lat, lon],
       {
         radius: acc

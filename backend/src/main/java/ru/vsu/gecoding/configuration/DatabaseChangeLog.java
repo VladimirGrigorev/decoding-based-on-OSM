@@ -65,9 +65,9 @@ public class DatabaseChangeLog {
         questionList.add(question1);
 
         Question question2 = new Question();
-        question2.setText("Спорт");
+        question2.setText("Покупки");
         question2.setTag("shop");
-        question2.setTagValue("sports");
+        question2.setTagValue("supermarket");
         questionList.add(question2);
 
         Question question3 = new Question();
@@ -105,6 +105,18 @@ public class DatabaseChangeLog {
         question8.setTag("tourism");
         question8.setTagValue("museum");
         questionList.add(question8);
+
+        Question question9 = new Question();
+        question9.setText("Журналы");
+        question9.setTag("shop");
+        question9.setTagValue("newsagent");
+        questionList.add(question9);
+
+        Question question10 = new Question();
+        question10.setText("Животные");
+        question10.setTag("shop");
+        question10.setTagValue("pet");
+        questionList.add(question10);
 
         questionRepository.insert(questionList);
     }

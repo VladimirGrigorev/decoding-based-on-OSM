@@ -31,6 +31,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(GET,"/api/v1/user/profile").hasAnyRole("USER", "ADMIN")
                 .antMatchers(POST,"/api/v1/geocoding/find").permitAll()
+                .antMatchers(POST,"/api/v1/question").hasRole("USER")
                 .antMatchers("/api/v1/security/*").anonymous()
 
                 .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -6,6 +6,7 @@ import ru.vsu.gecoding.data.entity.Checkin;
 import ru.vsu.gecoding.data.entity.User;
 import ru.vsu.gecoding.data.repository.UserRepository;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

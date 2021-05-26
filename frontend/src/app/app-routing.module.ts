@@ -5,6 +5,7 @@ import {ProfileComponent} from "./component/profile/profile.component";
 import {RegisterComponent} from "./component/register/register.component";
 import {LoginComponent} from "./component/login/login.component";
 import {InterviewComponent} from "./component/interview/interview.component";
+import {HistoryComponent} from "./component/history/history.component";
 
 const routes: Routes = [
   {path: '', component: MapComponent},
@@ -13,6 +14,7 @@ const routes: Routes = [
   {path: 'register', component: RegisterComponent},
   {path: 'login', component: LoginComponent},
   {path: 'interview', component: InterviewComponent},
+  {path: 'history', component: HistoryComponent},
 ];
 
 @NgModule({
